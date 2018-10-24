@@ -1,0 +1,8 @@
+{
+  "topLevel": "IGNORED",
+  "nested": {
+    "field": "IGNORED",
+    "notIgnored": "unchanged"
+  },
+  "notIgnored": "unchanged"
+}

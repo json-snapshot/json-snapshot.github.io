@@ -1,11 +1,13 @@
 package io.github.jsonSnapshot;
 
+import lombok.Getter;
 import org.assertj.core.util.diff.DiffUtils;
 import org.assertj.core.util.diff.Patch;
 
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 
@@ -19,6 +21,7 @@ public class Snapshot {
 
     private Function<Object, String> jsonFunction;
 
+    @Getter
     private Object[] current;
 
     Snapshot(SnapshotFile snapshotFile, Class clazz, Method method, Function<Object, String> jsonFunction, Object... current) {
@@ -75,5 +78,22 @@ public class Snapshot {
 
     public String getSnapshotName() {
         return clazz.getName() + "." + method.getName() + "=";
+    }
+
+    /**
+     * Ignore nested fields in the {@link #current} objects.
+     *
+     * @param pathsToIgnore Dot delimited paths to ignore within the {@link #current} objects. For example {@code nested.field}.
+     * @return self
+     * @throws SnapshotMatchException if the {@link #current} objects are not nested {@link Map}s.
+     */
+    public Snapshot ignoring(String... pathsToIgnore) throws SnapshotMatchException {
+        for (String path : pathsToIgnore) {
+            for (Object object : current) {
+                SnapshotUtils.deleteNestedFieldFromMap(object, path);
+            }
+        }
+
+        return this;
     }
 }

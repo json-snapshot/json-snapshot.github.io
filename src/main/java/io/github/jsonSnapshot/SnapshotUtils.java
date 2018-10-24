@@ -4,9 +4,11 @@ import org.mockito.ArgumentCaptor;
 
 import java.lang.reflect.Parameter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.verify;
@@ -81,5 +83,33 @@ public class SnapshotUtils {
         }
 
         return result;
+    }
+
+    public static void deleteNestedFieldFromMap(Object object, String path) {
+        deleteNestedFieldFromMap(object, Arrays.asList(path.split("\\.")));
+    }
+
+    private static void deleteNestedFieldFromMap(Object object, List<String> pathSegments) {
+        if (!(object instanceof Map)) {
+            throw new SnapshotMatchException("object is not a map");
+        }
+
+        Map map = (Map) object;
+        int numberOfSegments = pathSegments.size();
+
+        if (numberOfSegments == 0) {
+            return;
+        }
+
+        String key = pathSegments.get(0);
+
+        if (numberOfSegments == 1) {
+            if (map.containsKey(key)) {
+                map.put(key, "IGNORED");
+            }
+            return;
+        }
+
+        deleteNestedFieldFromMap(map.get(key), pathSegments.subList(1, numberOfSegments));
     }
 }
