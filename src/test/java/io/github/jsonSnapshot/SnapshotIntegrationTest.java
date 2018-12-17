@@ -73,4 +73,28 @@ public class SnapshotIntegrationTest {
 
     assertThrows(SnapshotMatchException.class, () -> expect(fakeObject1).toMatchSnapshot());
   }
+
+    @Test
+    public void shouldMatchSnapshotAndIgnoreTopLevelFieldMethod() {
+        expect(FakeObject.builder().id("anyId6").value(6).name("anyName6").build())
+                .ignoring("value")
+                .toMatchSnapshot();
+    }
+
+    @Test
+    public void shouldMatchSnapshotAndIgnoreSeveralNestedFieldsMethod() {
+        FakeObject grandChild = FakeObject.builder().id("grandChild7").value(7).build();
+        FakeObject child = FakeObject.builder().id("child7").value(7).fakeObject(grandChild).build();
+        expect(FakeObject.builder().id("anyId7").value(7).name("anyName7").fakeObject(child).build())
+                .ignoring("value", "fakeObject.id", "fakeObject.fakeObject")
+                .toMatchSnapshot();
+    }
+
+    @Test
+    public void shouldMatchSnapshotAndIgnoreEverythingMethod() {
+        FakeObject child = FakeObject.builder().id("child8").value(8).build();
+        expect(FakeObject.builder().id("anyId8").value(8).name("anyName8").fakeObject(child).build())
+                .ignoring("$..*")
+                .toMatchSnapshot();
+    }
 }

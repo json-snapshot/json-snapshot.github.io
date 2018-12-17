@@ -1,13 +1,21 @@
 package io.github.jsonSnapshot;
 
-import java.lang.reflect.Method;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Set;
-import java.util.function.Function;
-
+import com.jayway.jsonpath.DocumentContext;
+import com.jayway.jsonpath.JsonPath;
+import com.jayway.jsonpath.spi.json.JacksonJsonProvider;
 import org.assertj.core.util.diff.DiffUtils;
 import org.assertj.core.util.diff.Patch;
+
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
+import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
+import static io.github.jsonSnapshot.SnapshotMatcher.defaultJsonFunction;
 
 public class Snapshot {
 
@@ -18,6 +26,8 @@ public class Snapshot {
   private Method method;
 
   private Function<Object, String> jsonFunction;
+
+  private final List<String> pathsToIgnore = new ArrayList<>();
 
   private Object[] current;
 
@@ -65,11 +75,11 @@ public class Snapshot {
             + currentObject.trim()
             + "\n\n"
             + patch
-                .getDeltas()
-                .stream()
-                .map(delta -> delta.toString() + "\n")
-                .reduce(String::concat)
-                .get();
+            .getDeltas()
+            .stream()
+            .map(delta -> delta.toString() + "\n")
+            .reduce(String::concat)
+            .get();
     return new SnapshotMatchException(error);
   }
 
@@ -83,11 +93,39 @@ public class Snapshot {
     return null;
   }
 
+  private Object ignorePaths(Object input) {
+    DocumentContext context = JsonPath.using(new JacksonJsonProvider()).parse(defaultJsonFunction().apply(input));
+    this.pathsToIgnore.forEach(path -> context.delete(path));
+    String root = "$";
+    return context.read(root);
+  }
+
+  private Object[] getCurrentWithoutIgnoredPaths() {
+    if (pathsToIgnore.isEmpty() || current == null) {
+      return current;
+    }
+
+    return Arrays.asList(current).stream()
+        .map(this::ignorePaths)
+        .collect(Collectors.toList())
+        .toArray();
+  }
+
   private String takeSnapshot() {
-    return getSnapshotName() + jsonFunction.apply(current);
+    return getSnapshotName() + jsonFunction.apply(getCurrentWithoutIgnoredPaths());
   }
 
   public String getSnapshotName() {
     return clazz.getName() + "." + method.getName() + "=";
+  }
+
+  /**
+   * Ignore fields when comparing object and snapshot.
+   *
+   * @param jsonPathsToIgnore A list of paths to ignore in <a href="https://github.com/json-path/JsonPath">JsonPath</a> syntax.
+   */
+  public Snapshot ignoring(String... jsonPathsToIgnore) {
+    this.pathsToIgnore.addAll(Arrays.asList(jsonPathsToIgnore));
+    return this;
   }
 }
