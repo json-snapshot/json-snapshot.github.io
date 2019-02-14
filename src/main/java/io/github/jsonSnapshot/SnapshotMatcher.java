@@ -5,7 +5,6 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -29,6 +28,8 @@ import com.fasterxml.jackson.core.util.Separators;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 
+import io.github.jsonSnapshot.matchrule.SnapshotMatchRule;
+
 public class SnapshotMatcher {
 
   private static Logger log = LoggerFactory.getLogger(SnapshotMatcher.class);
@@ -37,6 +38,7 @@ public class SnapshotMatcher {
   private static SnapshotFile snapshotFile = null;
   private static List<Snapshot> calledSnapshots = new ArrayList<>();
   private static Function<Object, String> jsonFunction;
+  private static SnapshotMatchRule snapshotMatchRule;
 
   public static void start() {
     start(new DefaultConfig(), defaultJsonFunction());
@@ -58,26 +60,28 @@ public class SnapshotMatcher {
       snapshotFile =
           new SnapshotFile(
               config.getFilePath(), stackElement.getClassName().replaceAll("\\.", "/") + ".snap");
+      snapshotMatchRule = config.getSnapshotMatchRule();
     } catch (ClassNotFoundException | IOException e) {
       throw new SnapshotMatchException(e.getMessage());
     }
   }
 
   public static void validateSnapshots() {
-    Set<String> rawSnapshots = snapshotFile.getRawSnapshots();
+    SnapshotData storedSnapshots = snapshotFile.getStoredSnapshots();
     List<String> snapshotNames =
         calledSnapshots.stream().map(Snapshot::getSnapshotName).collect(Collectors.toList());
-    List<String> unusedRawSnapshots = new ArrayList<>();
+    List<SnapshotDataItem> unusedRawSnapshots = new ArrayList<>();
 
-    for (String rawSnapshot : rawSnapshots) {
+    for (SnapshotDataItem storedSnapshot : storedSnapshots.getItems()) {
       boolean foundSnapshot = false;
       for (String snapshotName : snapshotNames) {
-        if (rawSnapshot.contains(snapshotName)) {
+
+        if (storedSnapshot.getName().equals(snapshotName)) {
           foundSnapshot = true;
         }
       }
       if (!foundSnapshot) {
-        unusedRawSnapshots.add(rawSnapshot);
+        unusedRawSnapshots.add(storedSnapshot);
       }
     }
     if (unusedRawSnapshots.size() > 0) {
@@ -97,7 +101,8 @@ public class SnapshotMatcher {
     Object[] objects = mergeObjects(firstObject, others);
     StackTraceElement stackElement = findStackElement();
     Method method = getMethod(clazz, stackElement.getMethodName());
-    Snapshot snapshot = new Snapshot(snapshotFile, clazz, method, jsonFunction, objects);
+    Snapshot snapshot =
+        new Snapshot(snapshotFile, clazz, method, jsonFunction, snapshotMatchRule, objects);
     validateExpectCall(snapshot);
     calledSnapshots.add(snapshot);
     return snapshot;

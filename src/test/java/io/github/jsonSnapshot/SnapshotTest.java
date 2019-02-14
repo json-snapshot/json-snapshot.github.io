@@ -6,9 +6,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.TreeSet;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -16,12 +13,14 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import io.github.jsonSnapshot.matchrule.StringEqualsMatchRule;
+
 @ExtendWith(MockitoExtension.class)
 class SnapshotTest {
 
   private static final SnapshotConfig DEFAULT_CONFIG = new DefaultConfig();
   private static final String FILE_PATH = "src/test/java/anyFilePath";
-  private static final String SNAPSHOT_NAME = "java.lang.String.toString=";
+  private static final String SNAPSHOT_NAME = "java.lang.String.toString";
   private static final String SNAPSHOT = "java.lang.String.toString=[\n  \"anyObject\"\n]";
 
   private SnapshotFile snapshotFile;
@@ -37,6 +36,7 @@ class SnapshotTest {
             String.class,
             String.class.getDeclaredMethod("toString"),
             SnapshotMatcher.defaultJsonFunction(),
+            StringEqualsMatchRule.INSTANCE,
             "anyObject");
   }
 
@@ -54,13 +54,20 @@ class SnapshotTest {
   @Test
   void shouldMatchSnapshotSuccessfully() {
     snapshot.toMatchSnapshot();
-    assertThat(snapshotFile.getRawSnapshots())
-        .isEqualTo(Stream.of(SNAPSHOT).collect(Collectors.toCollection(TreeSet::new)));
+
+    final SnapshotData storedSnapshots = snapshotFile.getStoredSnapshots();
+    assertThat(storedSnapshots.getItems()).hasSize(1);
+
+    final SnapshotDataItem singleItem = storedSnapshots.getItems().get(0);
+    assertThat(singleItem)
+        .extracting("name", "data")
+        .containsExactly(SNAPSHOT_NAME, "[\n  \"anyObject\"\n]");
   }
 
   @Test
   void shouldMatchSnapshotWithException() {
-    snapshotFile.push(SNAPSHOT_NAME + "anyWrongSnapshot");
+
+    snapshotFile.push(SnapshotDataItem.ofNameAndData(SNAPSHOT_NAME, "anyWrongSnapshot"));
 
     assertThrows(SnapshotMatchException.class, snapshot::toMatchSnapshot);
   }

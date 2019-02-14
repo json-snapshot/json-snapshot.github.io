@@ -1,12 +1,14 @@
 package io.github.jsonSnapshot;
 
-import java.io.*;
-import java.util.Set;
-import java.util.TreeSet;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.ArrayList;
 
 import lombok.Getter;
+import lombok.NonNull;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -16,7 +18,7 @@ public class SnapshotFile {
 
   private String fileName;
 
-  @Getter private Set<String> rawSnapshots;
+  @Getter private SnapshotData storedSnapshots;
 
   SnapshotFile(String filePath, String fileName) throws IOException {
 
@@ -32,18 +34,19 @@ public class SnapshotFile {
         fileContent.append(sCurrentLine + "\n");
       }
 
-      String fileText = fileContent.toString();
+      final String fileText = fileContent.toString();
       if (StringUtils.isNotBlank(fileText)) {
-        rawSnapshots =
-            Stream.of(fileContent.toString().split(SPLIT_STRING))
-                .map(String::trim)
-                .collect(Collectors.toCollection(TreeSet::new));
+        storedSnapshots = new SnapshotData();
+        final String[] split = fileContent.toString().split(SPLIT_STRING);
+        for (final String rawData : split) {
+          storedSnapshots.add(SnapshotDataItem.ofRawData(rawData));
+        }
       } else {
-        rawSnapshots = new TreeSet<>();
+        storedSnapshots = new SnapshotData();
       }
     } catch (IOException e) {
       createFile(this.fileName);
-      rawSnapshots = new TreeSet<>();
+      storedSnapshots = new SnapshotData();
     }
   }
 
@@ -54,9 +57,8 @@ public class SnapshotFile {
     return file;
   }
 
-  public void push(String snapshot) {
-
-    rawSnapshots.add(snapshot);
+  public void push(@NonNull final SnapshotDataItem snapshot) {
+    storedSnapshots.add(snapshot);
 
     File file = null;
 
@@ -66,8 +68,13 @@ public class SnapshotFile {
       e.printStackTrace();
     }
 
-    try (FileOutputStream fileStream = new FileOutputStream(file, false)) {
-      byte[] myBytes = StringUtils.join(rawSnapshots, SPLIT_STRING).getBytes();
+    final ArrayList<String> rawItems = new ArrayList<>();
+    for (final SnapshotDataItem snapshotDataItem : storedSnapshots.getItems()) {
+      rawItems.add(snapshotDataItem.asRawData());
+    }
+
+    try (final FileOutputStream fileStream = new FileOutputStream(file, false)) {
+      byte[] myBytes = StringUtils.join(rawItems, SPLIT_STRING).getBytes();
       fileStream.write(myBytes);
     } catch (IOException e) {
       e.printStackTrace();

@@ -1,6 +1,8 @@
 package io.github.jsonSnapshot;
 
-import static io.github.jsonSnapshot.SnapshotMatcher.*;
+import static io.github.jsonSnapshot.SnapshotMatcher.expect;
+import static io.github.jsonSnapshot.SnapshotMatcher.start;
+import static io.github.jsonSnapshot.SnapshotMatcher.validateSnapshots;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import org.junit.jupiter.api.AfterAll;
@@ -9,12 +11,22 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import io.github.jsonSnapshot.matchrule.SnapshotMatchRule;
+import io.github.jsonSnapshot.matchrule.StringEqualsMatchRule;
+
 @ExtendWith(MockitoExtension.class)
 public class SnapshotIntegrationTest {
 
   @BeforeAll
   static void beforeAll() {
-    start();
+    start(
+        new SnapshotConfig() {
+          @Override
+          public SnapshotMatchRule getSnapshotMatchRule() {
+            // return JSONAssertMatchRule.INSTANCE_LENIENT;
+            return StringEqualsMatchRule.INSTANCE;
+          }
+        });
   }
 
   @AfterAll
@@ -59,7 +71,7 @@ public class SnapshotIntegrationTest {
         SnapshotMatchException.class,
         expect(FakeObject.builder().id("anyId5").value(6).name("anyName5").build())
             ::toMatchSnapshot,
-        "Error on: \n"
+        "StringEqualsMatchRule - Error on: \n"
             + "io.github.jsonSnapshot.SnapshotIntegrationTest.shouldThrowSnapshotMatchException=[");
   }
 
