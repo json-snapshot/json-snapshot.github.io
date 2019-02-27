@@ -1,9 +1,8 @@
 package io.github.jsonSnapshot;
 
 import java.lang.reflect.Method;
+import java.util.Optional;
 import java.util.function.Function;
-
-import io.github.jsonSnapshot.matchrule.SnapshotMatchRule;
 
 public class Snapshot {
 
@@ -15,7 +14,7 @@ public class Snapshot {
 
   private Function<Object, String> jsonFunction;
 
-  private SnapshotMatchRule snapshotMatchRule;
+  private SnapshotMatchingStragety snapshotMatchRule;
 
   private Object[] current;
 
@@ -24,7 +23,7 @@ public class Snapshot {
       Class clazz,
       Method method,
       Function<Object, String> jsonFunction,
-      SnapshotMatchRule snapshotMatchRule,
+      SnapshotMatchingStragety snapshotMatchRule,
       Object... current) {
     this.current = current;
     this.snapshotFile = snapshotFile;
@@ -37,13 +36,13 @@ public class Snapshot {
   public void toMatchSnapshot() {
 
     final SnapshotData snapshots = snapshotFile.getStoredSnapshots();
-    final SnapshotDataItem snapshotOrNull = snapshots.getItemByNameOrNull(getSnapshotName());
+    final Optional<SnapshotDataItem> snapshot = snapshots.getItemByNameOrNull(getSnapshotName());
 
     final SnapshotDataItem currentObject = takeSnapshot();
 
     // Match Snapshot
-    if (snapshotOrNull != null) {
-      snapshotMatchRule.match(snapshotOrNull.getData(), currentObject.getData());
+    if (snapshot.isPresent()) {
+      snapshotMatchRule.match(snapshot.get(), currentObject.getData());
     }
     // Create New Snapshot
     else {

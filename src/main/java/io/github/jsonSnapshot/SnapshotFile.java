@@ -2,10 +2,11 @@ package io.github.jsonSnapshot;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.ArrayList;
+import java.nio.file.Files;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import lombok.Getter;
 import lombok.NonNull;
@@ -26,6 +27,7 @@ public class SnapshotFile {
 
     StringBuilder fileContent = new StringBuilder();
 
+    storedSnapshots = new SnapshotData();
     try (BufferedReader br = new BufferedReader(new FileReader(this.fileName))) {
 
       String sCurrentLine;
@@ -36,17 +38,12 @@ public class SnapshotFile {
 
       final String fileText = fileContent.toString();
       if (StringUtils.isNotBlank(fileText)) {
-        storedSnapshots = new SnapshotData();
+
         final String[] split = fileContent.toString().split(SPLIT_STRING);
-        for (final String rawData : split) {
-          storedSnapshots.add(SnapshotDataItem.ofRawData(rawData));
-        }
-      } else {
-        storedSnapshots = new SnapshotData();
+        Stream.of(split).map(SnapshotDataItem::ofRawData).forEach(storedSnapshots::add);
       }
     } catch (IOException e) {
       createFile(this.fileName);
-      storedSnapshots = new SnapshotData();
     }
   }
 
@@ -60,24 +57,26 @@ public class SnapshotFile {
   public void push(@NonNull final SnapshotDataItem snapshot) {
     storedSnapshots.add(snapshot);
 
-    File file = null;
-
+    final File file;
     try {
       file = createFile(fileName);
     } catch (IOException e) {
-      e.printStackTrace();
+      throw new RuntimeException("Unable to create snapshot items file " + fileName, e);
     }
 
-    final ArrayList<String> rawItems = new ArrayList<>();
-    for (final SnapshotDataItem snapshotDataItem : storedSnapshots.getItems()) {
-      rawItems.add(snapshotDataItem.asRawData());
-    }
+    final byte[] myBytes =
+        storedSnapshots
+            .getItems()
+            .stream()
+            .map(SnapshotDataItem::asRawData)
+            .collect(Collectors.joining(SPLIT_STRING))
+            .getBytes();
 
-    try (final FileOutputStream fileStream = new FileOutputStream(file, false)) {
-      byte[] myBytes = StringUtils.join(rawItems, SPLIT_STRING).getBytes();
-      fileStream.write(myBytes);
+    try {
+      Files.write(file.toPath(), myBytes);
     } catch (IOException e) {
-      e.printStackTrace();
+      throw new RuntimeException(
+          "Unable to write snapshot items to file " + file.getAbsolutePath(), e);
     }
   }
 }

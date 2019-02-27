@@ -28,8 +28,6 @@ import com.fasterxml.jackson.core.util.Separators;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 
-import io.github.jsonSnapshot.matchrule.SnapshotMatchRule;
-
 public class SnapshotMatcher {
 
   private static Logger log = LoggerFactory.getLogger(SnapshotMatcher.class);
@@ -38,7 +36,7 @@ public class SnapshotMatcher {
   private static SnapshotFile snapshotFile = null;
   private static List<Snapshot> calledSnapshots = new ArrayList<>();
   private static Function<Object, String> jsonFunction;
-  private static SnapshotMatchRule snapshotMatchRule;
+  private static SnapshotMatchingStragety snapshotMatchRule;
 
   public static void start() {
     start(new DefaultConfig(), defaultJsonFunction());

@@ -1,7 +1,6 @@
 package io.github.jsonSnapshot;
 
-import io.github.jsonSnapshot.matchrule.SnapshotMatchRule;
-import io.github.jsonSnapshot.matchrule.StringEqualsMatchRule;
+import io.github.jsonSnapshot.matchingstrategy.StringEqualsMatchingStrategy;
 
 public interface SnapshotConfig {
 
@@ -9,7 +8,7 @@ public interface SnapshotConfig {
     return "src/test/java/";
   }
 
-  default SnapshotMatchRule getSnapshotMatchRule() {
-    return StringEqualsMatchRule.INSTANCE;
+  default SnapshotMatchingStragety getSnapshotMatchRule() {
+    return StringEqualsMatchingStrategy.INSTANCE;
   }
 }

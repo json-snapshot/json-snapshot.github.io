@@ -8,9 +8,13 @@ import lombok.Value;
 
 @Value
 public class SnapshotDataItem implements Comparable<SnapshotDataItem> {
+
   private static final int REGEX_FLAGS = Pattern.MULTILINE + Pattern.DOTALL;
   private static final Pattern REGEX =
       Pattern.compile("(?<name>[^ =]*) *=+ *(?<data>\\[.*\\])[^\\]]*", REGEX_FLAGS);
+
+  private final String name;
+  private final String data;
 
   public static SnapshotDataItem ofRawData(@NonNull final String rawDataString)
       throws IllegalRawDataException {
@@ -35,10 +39,6 @@ public class SnapshotDataItem implements Comparable<SnapshotDataItem> {
       @NonNull final String name, @NonNull final String data) {
     return new SnapshotDataItem(name, data);
   }
-
-  String name;
-
-  String data;
 
   private SnapshotDataItem(@NonNull final String name, @NonNull final String data) {
     this.name = name;

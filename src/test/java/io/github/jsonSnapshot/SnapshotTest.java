@@ -13,7 +13,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import io.github.jsonSnapshot.matchrule.StringEqualsMatchRule;
+import io.github.jsonSnapshot.matchingstrategy.StringEqualsMatchingStrategy;
 
 @ExtendWith(MockitoExtension.class)
 class SnapshotTest {
@@ -36,7 +36,7 @@ class SnapshotTest {
             String.class,
             String.class.getDeclaredMethod("toString"),
             SnapshotMatcher.defaultJsonFunction(),
-            StringEqualsMatchRule.INSTANCE,
+            StringEqualsMatchingStrategy.INSTANCE,
             "anyObject");
   }
 

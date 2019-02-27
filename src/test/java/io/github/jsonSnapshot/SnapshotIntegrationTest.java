@@ -11,8 +11,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import io.github.jsonSnapshot.matchrule.SnapshotMatchRule;
-import io.github.jsonSnapshot.matchrule.StringEqualsMatchRule;
+import io.github.jsonSnapshot.matchingstrategy.StringEqualsMatchingStrategy;
 
 @ExtendWith(MockitoExtension.class)
 public class SnapshotIntegrationTest {
@@ -22,9 +21,9 @@ public class SnapshotIntegrationTest {
     start(
         new SnapshotConfig() {
           @Override
-          public SnapshotMatchRule getSnapshotMatchRule() {
+          public SnapshotMatchingStragety getSnapshotMatchRule() {
             // return JSONAssertMatchRule.INSTANCE_LENIENT;
-            return StringEqualsMatchRule.INSTANCE;
+            return StringEqualsMatchingStrategy.INSTANCE;
           }
         });
   }

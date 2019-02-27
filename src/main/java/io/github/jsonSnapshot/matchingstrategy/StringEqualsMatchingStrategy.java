@@ -1,22 +1,29 @@
-package io.github.jsonSnapshot.matchrule;
+package io.github.jsonSnapshot.matchingstrategy;
 
 import java.util.Arrays;
+
+import lombok.NonNull;
 
 import org.assertj.core.util.diff.DiffUtils;
 import org.assertj.core.util.diff.Patch;
 
+import io.github.jsonSnapshot.SnapshotDataItem;
 import io.github.jsonSnapshot.SnapshotMatchException;
-import lombok.NonNull;
+import io.github.jsonSnapshot.SnapshotMatchingStragety;
 
-public class StringEqualsMatchRule implements SnapshotMatchRule {
-  public static final StringEqualsMatchRule INSTANCE = new StringEqualsMatchRule();
+public class StringEqualsMatchingStrategy implements SnapshotMatchingStragety {
+  public static final StringEqualsMatchingStrategy INSTANCE = new StringEqualsMatchingStrategy();
 
-  private StringEqualsMatchRule() {}
+  private StringEqualsMatchingStrategy() {}
 
   @Override
-  public void match(@NonNull final String rawSnapshot, @NonNull final String currentObject) {
-    if (!rawSnapshot.trim().equals(currentObject.trim())) {
-      throw generateDiffError(rawSnapshot, currentObject);
+  public void match(
+      @NonNull final SnapshotDataItem expectedSnapshotItem, @NonNull final String currentObject) {
+
+    final String rawSnapshotStr = expectedSnapshotItem.getData();
+
+    if (!rawSnapshotStr.trim().equals(currentObject.trim())) {
+      throw generateDiffError(rawSnapshotStr, currentObject);
     }
   }
 
