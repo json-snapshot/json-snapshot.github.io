@@ -19,7 +19,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class SnapshotTest {
 
-  private static final SnapshotConfig DEFAULT_CONFIG = new DefaultConfig();
+  private static final SnapshotConfig DEFAULT_CONFIG = SnapshotConfig.builder().build();
   private static final String FILE_PATH = "src/test/java/anyFilePath";
   private static final String SNAPSHOT_NAME = "java.lang.String.toString=";
   private static final String SNAPSHOT = "java.lang.String.toString=[\n  \"anyObject\"\n]";
@@ -35,8 +35,8 @@ class SnapshotTest {
         new Snapshot(
             snapshotFile,
             String.class,
-            String.class.getDeclaredMethod("toString"),
-            SnapshotMatcher.defaultJsonFunction(),
+            "toString",
+            SnapshotUtils.defaultJsonFunction(),
             "anyObject");
   }
 

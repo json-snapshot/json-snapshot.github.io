@@ -10,44 +10,32 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.assertj.core.util.Arrays;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.jupiter.api.BeforeAll;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.core.PrettyPrinter;
-import com.fasterxml.jackson.core.util.DefaultIndenter;
-import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
-import com.fasterxml.jackson.core.util.DefaultPrettyPrinter.Indenter;
-import com.fasterxml.jackson.core.util.Separators;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-
 public class SnapshotMatcher {
 
   private static Logger log = LoggerFactory.getLogger(SnapshotMatcher.class);
-
+  private static final SnapshotConfig DEFAULT_CONFIG = SnapshotConfig.builder().build();
   private static Class clazz = null;
   private static SnapshotFile snapshotFile = null;
   private static List<Snapshot> calledSnapshots = new ArrayList<>();
   private static Function<Object, String> jsonFunction;
 
   public static void start() {
-    start(new DefaultConfig(), defaultJsonFunction());
+    start(DEFAULT_CONFIG, SnapshotUtils.defaultJsonFunction());
   }
 
   public static void start(SnapshotConfig config) {
-    start(config, defaultJsonFunction());
+    start(config, SnapshotUtils.defaultJsonFunction());
   }
 
   public static void start(Function<Object, String> jsonFunction) {
-    start(new DefaultConfig(), jsonFunction);
+    start(DEFAULT_CONFIG, jsonFunction);
   }
 
   public static void start(SnapshotConfig config, Function<Object, String> jsonFunction) {
@@ -94,70 +82,13 @@ public class SnapshotMatcher {
       throw new SnapshotMatchException(
           "SnapshotTester not yet started! Start it on @BeforeClass/@BeforeAll with SnapshotMatcher.start()");
     }
-    Object[] objects = mergeObjects(firstObject, others);
+    Object[] objects = SnapshotUtils.mergeObjects(firstObject, others);
     StackTraceElement stackElement = findStackElement();
     Method method = getMethod(clazz, stackElement.getMethodName());
-    Snapshot snapshot = new Snapshot(snapshotFile, clazz, method, jsonFunction, objects);
-    validateExpectCall(snapshot);
+    Snapshot snapshot = new Snapshot(snapshotFile, clazz, method.getName(), jsonFunction, objects);
+    SnapshotUtils.validateExpectCall(snapshot, calledSnapshots);
     calledSnapshots.add(snapshot);
     return snapshot;
-  }
-
-  static Function<Object, String> defaultJsonFunction() {
-
-    ObjectMapper objectMapper = buildObjectMapper();
-
-    PrettyPrinter pp = buildDefaultPrettyPrinter();
-
-    return (object) -> {
-      try {
-        return objectMapper.writer(pp).writeValueAsString(object);
-      } catch (Exception e) {
-        throw new SnapshotMatchException(e.getMessage());
-      }
-    };
-  }
-
-  private static PrettyPrinter buildDefaultPrettyPrinter() {
-    DefaultPrettyPrinter pp =
-        new DefaultPrettyPrinter("") {
-          @Override
-          public DefaultPrettyPrinter withSeparators(Separators separators) {
-            this._separators = separators;
-            this._objectFieldValueSeparatorWithSpaces =
-                separators.getObjectFieldValueSeparator() + " ";
-            return this;
-          }
-        };
-    Indenter lfOnlyIndenter = new DefaultIndenter("  ", "\n");
-    pp.indentArraysWith(lfOnlyIndenter);
-    pp.indentObjectsWith(lfOnlyIndenter);
-    return pp;
-  }
-
-  private static ObjectMapper buildObjectMapper() {
-    ObjectMapper objectMapper = new ObjectMapper();
-    objectMapper.configure(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, true);
-    objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
-
-    objectMapper.setVisibility(
-        objectMapper
-            .getSerializationConfig()
-            .getDefaultVisibilityChecker()
-            .withFieldVisibility(JsonAutoDetect.Visibility.ANY)
-            .withGetterVisibility(JsonAutoDetect.Visibility.NONE)
-            .withSetterVisibility(JsonAutoDetect.Visibility.NONE)
-            .withCreatorVisibility(JsonAutoDetect.Visibility.NONE));
-    return objectMapper;
-  }
-
-  private static void validateExpectCall(Snapshot snapshot) {
-    for (Snapshot eachSnapshot : calledSnapshots) {
-      if (eachSnapshot.getSnapshotName().equals(snapshot.getSnapshotName())) {
-        throw new SnapshotMatchException(
-            "You can only call 'expect' once per test method. Try using array of arguments on a single 'expect' call");
-      }
-    }
   }
 
   private static Method getMethod(Class<?> clazz, String methodName) {
@@ -209,15 +140,6 @@ public class SnapshotMatcher {
         || method.isAnnotationPresent(BeforeClass.class)
         || method.isAnnotationPresent(org.junit.jupiter.api.Test.class)
         || method.isAnnotationPresent(BeforeAll.class);
-  }
-
-  private static Object[] mergeObjects(Object firstObject, Object[] others) {
-    Object[] objects = new Object[1];
-    objects[0] = firstObject;
-    if (!Arrays.isNullOrEmpty(others)) {
-      objects = ArrayUtils.addAll(objects, others);
-    }
-    return objects;
   }
 
   private static Class<?> getClass(String className) {

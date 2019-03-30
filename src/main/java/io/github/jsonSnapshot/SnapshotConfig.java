@@ -1,5 +1,10 @@
 package io.github.jsonSnapshot;
 
-public interface SnapshotConfig {
-  String getFilePath();
+import lombok.Builder;
+import lombok.Getter;
+
+@Builder
+@Getter
+public class SnapshotConfig {
+  @Builder.Default private final String filePath = "src/test/java/";
 }
