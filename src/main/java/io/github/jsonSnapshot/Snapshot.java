@@ -1,6 +1,5 @@
 package io.github.jsonSnapshot;
 
-import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Set;
@@ -15,22 +14,22 @@ public class Snapshot {
 
   private Class clazz;
 
-  private Method method;
+  private String testName;
 
   private Function<Object, String> jsonFunction;
 
   private Object[] current;
 
-  Snapshot(
+  public Snapshot(
       SnapshotFile snapshotFile,
       Class clazz,
-      Method method,
+      String method,
       Function<Object, String> jsonFunction,
       Object... current) {
     this.current = current;
     this.snapshotFile = snapshotFile;
     this.clazz = clazz;
-    this.method = method;
+    this.testName = method;
     this.jsonFunction = jsonFunction;
   }
 
@@ -88,6 +87,6 @@ public class Snapshot {
   }
 
   public String getSnapshotName() {
-    return clazz.getName() + "." + method.getName() + "=";
+    return String.format("%s.%s=", clazz.getName(), testName);
   }
 }

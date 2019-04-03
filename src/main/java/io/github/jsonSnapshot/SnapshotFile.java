@@ -1,6 +1,7 @@
 package io.github.jsonSnapshot;
 
 import java.io.*;
+import java.nio.file.Paths;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
@@ -18,9 +19,9 @@ public class SnapshotFile {
 
   @Getter private Set<String> rawSnapshots;
 
-  SnapshotFile(String filePath, String fileName) throws IOException {
+  public SnapshotFile(String filePath, String fileName) throws IOException {
 
-    this.fileName = filePath + fileName;
+    this.fileName = Paths.get(filePath, fileName).toString();
 
     StringBuilder fileContent = new StringBuilder();
 
