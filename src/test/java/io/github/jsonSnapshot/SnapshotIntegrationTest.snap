@@ -1,3 +1,27 @@
+io.github.jsonSnapshot.SnapshotIntegrationTest.shouldMatchSnapshotAndIgnoreEverythingMethod=[
+  { }
+]
+
+
+io.github.jsonSnapshot.SnapshotIntegrationTest.shouldMatchSnapshotAndIgnoreSeveralNestedFieldsMethod=[
+  {
+    "fakeObject": {
+      "value": 7
+    },
+    "id": "anyId7",
+    "name": "anyName7"
+  }
+]
+
+
+io.github.jsonSnapshot.SnapshotIntegrationTest.shouldMatchSnapshotAndIgnoreTopLevelFieldMethod=[
+  {
+    "id": "anyId6",
+    "name": "anyName6"
+  }
+]
+
+
 io.github.jsonSnapshot.SnapshotIntegrationTest.shouldMatchSnapshotFour=[
   {
     "id": "anyId4",
