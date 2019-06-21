@@ -21,7 +21,7 @@ public class SnapshotIntegrationTest {
     start(
         new SnapshotConfig() {
           @Override
-          public SnapshotMatchingStragety getSnapshotMatchRule() {
+          public SnapshotMatchingStrategy getSnapshotMatchingStrategy() {
             // return JSONAssertMatchRule.INSTANCE_LENIENT;
             return StringEqualsMatchingStrategy.INSTANCE;
           }

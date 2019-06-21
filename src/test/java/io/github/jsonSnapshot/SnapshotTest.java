@@ -67,7 +67,7 @@ class SnapshotTest {
   @Test
   void shouldMatchSnapshotWithException() {
 
-    snapshotFile.push(SnapshotDataItem.ofNameAndData(SNAPSHOT_NAME, "anyWrongSnapshot"));
+    snapshotFile.push(new SnapshotDataItem(SNAPSHOT_NAME, "anyWrongSnapshot"));
 
     assertThrows(SnapshotMatchException.class, snapshot::toMatchSnapshot);
   }

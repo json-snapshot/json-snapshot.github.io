@@ -50,7 +50,8 @@ class SnapshotDataTest {
 
   private void performTest(
       final String rawDataString, final String expectedName, final String expectedData) {
-    final SnapshotDataItem result = SnapshotDataItem.ofRawData(rawDataString);
+
+    final SnapshotDataItem result = new SnapshotDataItem(rawDataString);
 
     assertThat(result.getName()).as("name").isEqualTo(expectedName);
     assertThat(result.getData()).as("data").isEqualToIgnoringNewLines(expectedData);

@@ -6,6 +6,8 @@ import java.util.regex.Pattern;
 import lombok.NonNull;
 import lombok.Value;
 
+import org.apache.commons.lang3.StringUtils;
+
 @Value
 public class SnapshotDataItem implements Comparable<SnapshotDataItem> {
 
@@ -16,33 +18,23 @@ public class SnapshotDataItem implements Comparable<SnapshotDataItem> {
   private final String name;
   private final String data;
 
-  public static SnapshotDataItem ofRawData(@NonNull final String rawDataString)
-      throws IllegalRawDataException {
+  public SnapshotDataItem(@NonNull final String rawDataString) {
     final Matcher matcher = REGEX.matcher(rawDataString);
     if (!matcher.matches()) {
-      throw new IllegalRawDataException(rawDataString);
+      throw new IllegalArgumentException(
+          "Raw data string does not match expected pattern. String: " + rawDataString);
     }
 
     final String name = matcher.group("name");
     final String data = matcher.group("data");
-    return SnapshotDataItem.ofNameAndData(trimOrNull(name), trimOrNull(data));
+
+    this.name = StringUtils.trim(name);
+    this.data = StringUtils.trim(data);
   }
 
-  private static String trimOrNull(final String str) {
-    if (str == null) {
-      return null;
-    }
-    return str.trim();
-  }
-
-  public static SnapshotDataItem ofNameAndData(
-      @NonNull final String name, @NonNull final String data) {
-    return new SnapshotDataItem(name, data);
-  }
-
-  private SnapshotDataItem(@NonNull final String name, @NonNull final String data) {
-    this.name = name;
-    this.data = data;
+  public SnapshotDataItem(String name, String data) {
+    this.name = StringUtils.trim(name);
+    this.data = StringUtils.trim(data);
   }
 
   public String asRawData() {
@@ -55,13 +47,5 @@ public class SnapshotDataItem implements Comparable<SnapshotDataItem> {
       return 1;
     }
     return this.name.compareTo(o.name);
-  }
-
-  public static final class IllegalRawDataException extends IllegalArgumentException {
-    private static final long serialVersionUID = -5698941959821538053L;
-
-    private IllegalRawDataException(String invalidRawData) {
-      super(invalidRawData);
-    }
   }
 }

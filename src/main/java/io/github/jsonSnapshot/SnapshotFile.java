@@ -1,10 +1,14 @@
 package io.github.jsonSnapshot;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -15,65 +19,65 @@ import org.apache.commons.lang3.StringUtils;
 
 public class SnapshotFile {
 
+  private static final Charset UTF_8 = StandardCharsets.UTF_8;
   private static final String SPLIT_STRING = "\n\n\n";
 
-  private String fileName;
+  private String pathAndfileName;
 
   @Getter private SnapshotData storedSnapshots;
 
   SnapshotFile(String filePath, String fileName) throws IOException {
 
-    this.fileName = filePath + fileName;
+    this.pathAndfileName = filePath + fileName;
+    this.storedSnapshots = new SnapshotData();
 
-    StringBuilder fileContent = new StringBuilder();
-
-    storedSnapshots = new SnapshotData();
-    try (BufferedReader br = new BufferedReader(new FileReader(this.fileName))) {
-
-      String sCurrentLine;
-
-      while ((sCurrentLine = br.readLine()) != null) {
-        fileContent.append(sCurrentLine + "\n");
-      }
-
-      final String fileText = fileContent.toString();
-      if (StringUtils.isNotBlank(fileText)) {
-
-        final String[] split = fileContent.toString().split(SPLIT_STRING);
-        Stream.of(split).map(SnapshotDataItem::ofRawData).forEach(storedSnapshots::add);
-      }
+    try {
+      loadSnapshotFile();
     } catch (IOException e) {
-      createFile(this.fileName);
+      createFile(this.pathAndfileName);
     }
   }
 
-  private File createFile(String fileName) throws IOException {
+  private void loadSnapshotFile() throws IOException {
+
+    Path path = Paths.get(this.pathAndfileName);
+
+    String lines = new String(Files.readAllBytes(path), UTF_8);
+    String[] rawSnapshotItems = lines.split(SPLIT_STRING);
+
+    Stream.of(rawSnapshotItems)
+        .filter(StringUtils::isNotBlank)
+        .map(SnapshotDataItem::new)
+        .forEach(storedSnapshots::add);
+  }
+
+  private File createFile(String fileName) {
+
     File file = new File(fileName);
-    file.getParentFile().mkdirs();
-    file.createNewFile();
-    return file;
+    try {
+      file.getParentFile().mkdirs();
+      file.createNewFile();
+      return file;
+    } catch (IOException e) {
+      throw new RuntimeException("Unable to create new file " + file.getAbsolutePath(), e);
+    }
   }
 
   public void push(@NonNull final SnapshotDataItem snapshot) {
+
     storedSnapshots.add(snapshot);
 
-    final File file;
-    try {
-      file = createFile(fileName);
-    } catch (IOException e) {
-      throw new RuntimeException("Unable to create snapshot items file " + fileName, e);
-    }
+    final File file = createFile(pathAndfileName); // exception handling inside
+    try (OutputStreamWriter fileWriter =
+        new OutputStreamWriter(new FileOutputStream(file, false), UTF_8)) {
 
-    final byte[] myBytes =
-        storedSnapshots
-            .getItems()
-            .stream()
-            .map(SnapshotDataItem::asRawData)
-            .collect(Collectors.joining(SPLIT_STRING))
-            .getBytes();
-
-    try {
-      Files.write(file.toPath(), myBytes);
+      String content =
+          storedSnapshots
+              .getItems()
+              .stream()
+              .map(SnapshotDataItem::asRawData)
+              .collect(Collectors.joining(SPLIT_STRING));
+      fileWriter.write(content);
     } catch (IOException e) {
       throw new RuntimeException(
           "Unable to write snapshot items to file " + file.getAbsolutePath(), e);

@@ -36,7 +36,7 @@ public class SnapshotMatcher {
   private static SnapshotFile snapshotFile = null;
   private static List<Snapshot> calledSnapshots = new ArrayList<>();
   private static Function<Object, String> jsonFunction;
-  private static SnapshotMatchingStragety snapshotMatchRule;
+  private static SnapshotMatchingStrategy snapshotMatchingStrategy;
 
   public static void start() {
     start(new DefaultConfig(), defaultJsonFunction());
@@ -58,7 +58,7 @@ public class SnapshotMatcher {
       snapshotFile =
           new SnapshotFile(
               config.getFilePath(), stackElement.getClassName().replaceAll("\\.", "/") + ".snap");
-      snapshotMatchRule = config.getSnapshotMatchRule();
+      snapshotMatchingStrategy = config.getSnapshotMatchingStrategy();
     } catch (ClassNotFoundException | IOException e) {
       throw new SnapshotMatchException(e.getMessage());
     }
@@ -100,7 +100,7 @@ public class SnapshotMatcher {
     StackTraceElement stackElement = findStackElement();
     Method method = getMethod(clazz, stackElement.getMethodName());
     Snapshot snapshot =
-        new Snapshot(snapshotFile, clazz, method, jsonFunction, snapshotMatchRule, objects);
+        new Snapshot(snapshotFile, clazz, method, jsonFunction, snapshotMatchingStrategy, objects);
     validateExpectCall(snapshot);
     calledSnapshots.add(snapshot);
     return snapshot;

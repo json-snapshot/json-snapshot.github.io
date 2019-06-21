@@ -102,6 +102,13 @@
       <version>1.2.0</version>
     </dependency>
     <dependency>
+      <!-- workaround for https://bugs.eclipse.org/bugs/show_bug.cgi?id=545849 -->
+        <groupId>org.junit.platform</groupId>
+      <artifactId>junit-platform-launcher</artifactId>
+      <version>1.4.1</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
       <groupId>org.junit.vintage</groupId>
       <artifactId>junit-vintage-engine</artifactId>
       <version>5.2.0</version>

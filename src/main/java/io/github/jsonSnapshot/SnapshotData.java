@@ -21,7 +21,7 @@ public class SnapshotData {
     snapshotDataItems.put(snapshotDataItem.getName(), snapshotDataItem);
   }
 
-  public Optional<SnapshotDataItem> getItemByNameOrNull(@NonNull final String snapshotName) {
+  public Optional<SnapshotDataItem> getItemByName(@NonNull final String snapshotName) {
     return Optional.ofNullable(snapshotDataItems.get(snapshotName));
   }
 

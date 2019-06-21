@@ -9,9 +9,9 @@ import org.assertj.core.util.diff.Patch;
 
 import io.github.jsonSnapshot.SnapshotDataItem;
 import io.github.jsonSnapshot.SnapshotMatchException;
-import io.github.jsonSnapshot.SnapshotMatchingStragety;
+import io.github.jsonSnapshot.SnapshotMatchingStrategy;
 
-public class StringEqualsMatchingStrategy implements SnapshotMatchingStragety {
+public class StringEqualsMatchingStrategy implements SnapshotMatchingStrategy {
   public static final StringEqualsMatchingStrategy INSTANCE = new StringEqualsMatchingStrategy();
 
   private StringEqualsMatchingStrategy() {}

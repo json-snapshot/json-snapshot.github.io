@@ -8,9 +8,9 @@ import org.skyscreamer.jsonassert.JSONCompareMode;
 
 import io.github.jsonSnapshot.SnapshotDataItem;
 import io.github.jsonSnapshot.SnapshotMatchException;
-import io.github.jsonSnapshot.SnapshotMatchingStragety;
+import io.github.jsonSnapshot.SnapshotMatchingStrategy;
 
-public class JSONAssertMatchingStrategy implements SnapshotMatchingStragety {
+public class JSONAssertMatchingStrategy implements SnapshotMatchingStrategy {
   public static final JSONAssertMatchingStrategy INSTANCE_LENIENT =
       new JSONAssertMatchingStrategy(JSONCompareMode.LENIENT);
 

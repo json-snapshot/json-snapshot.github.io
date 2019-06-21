@@ -8,7 +8,7 @@ public interface SnapshotConfig {
     return "src/test/java/";
   }
 
-  default SnapshotMatchingStragety getSnapshotMatchRule() {
+  default SnapshotMatchingStrategy getSnapshotMatchingStrategy() {
     return StringEqualsMatchingStrategy.INSTANCE;
   }
 }

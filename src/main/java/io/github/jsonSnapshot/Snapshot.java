@@ -14,7 +14,7 @@ public class Snapshot {
 
   private Function<Object, String> jsonFunction;
 
-  private SnapshotMatchingStragety snapshotMatchRule;
+  private SnapshotMatchingStrategy snapshotMatchingStrategy;
 
   private Object[] current;
 
@@ -23,26 +23,26 @@ public class Snapshot {
       Class clazz,
       Method method,
       Function<Object, String> jsonFunction,
-      SnapshotMatchingStragety snapshotMatchRule,
+      SnapshotMatchingStrategy snapshotMatchingStrategy,
       Object... current) {
     this.current = current;
     this.snapshotFile = snapshotFile;
     this.clazz = clazz;
     this.method = method;
     this.jsonFunction = jsonFunction;
-    this.snapshotMatchRule = snapshotMatchRule;
+    this.snapshotMatchingStrategy = snapshotMatchingStrategy;
   }
 
   public void toMatchSnapshot() {
 
     final SnapshotData snapshots = snapshotFile.getStoredSnapshots();
-    final Optional<SnapshotDataItem> snapshot = snapshots.getItemByNameOrNull(getSnapshotName());
+    final Optional<SnapshotDataItem> snapshot = snapshots.getItemByName(getSnapshotName());
 
     final SnapshotDataItem currentObject = takeSnapshot();
 
     // Match Snapshot
     if (snapshot.isPresent()) {
-      snapshotMatchRule.match(snapshot.get(), currentObject.getData());
+      snapshotMatchingStrategy.match(snapshot.get(), currentObject.getData());
     }
     // Create New Snapshot
     else {
@@ -51,7 +51,7 @@ public class Snapshot {
   }
 
   private SnapshotDataItem takeSnapshot() {
-    return SnapshotDataItem.ofNameAndData(getSnapshotName(), jsonFunction.apply(current));
+    return new SnapshotDataItem(getSnapshotName(), jsonFunction.apply(current));
   }
 
   public String getSnapshotName() {
