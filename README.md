@@ -1,3 +1,5 @@
+## Snapshot Testing for [JUnit](https://junit.org/) & [Spock](http://spockframework.org/)
+
 #### Purpose of Snapshot Testing
 Snapshots help figuring out whether the output of the modules covered by tests is changed, without doing tons of asserts!
 
@@ -16,8 +18,6 @@ Based on [facebook's Jest framework](https://facebook.github.io/jest/docs/en/sna
 <a href="https://github.com/json-snapshot/json-snapshot.github.io"><img src="https://assets-cdn.github.com/images/modules/logos_page/GitHub-Mark.png" width="80"></a>
 
 
-
-
 #### How to install using [Maven](https://mvnrepository.com/artifact/io.github.json-snapshot/json-snapshot/1.0.17)
 
 
@@ -33,7 +33,7 @@ Add to your pom.xml dependencies section:
 ```
 
 
-#### Usage
+#### Usage (JUnit)
 
 ```java
 package com.example;
@@ -188,6 +188,49 @@ com.example.ExampleTest.shouldExtractArgsFromFakeMethodWithComplexObject=[
 
 Whenever it runs again, the `expect` method argument will be automatically validated with the `.snap` file. That is why you should commit every `.snap` file created.
 
+#### Usage (Spock)
+
+```groovy
+package specs
+
+import static io.github.jsonSnapshot.SnapshotMatcher.expectScenario
+import io.github.jsonSnapshot.SnapshotMatcher
+import io.github.jsonSnapshot.SpockConfig
+import spock.lang.Specification
+
+class MySpec extends Specification {
+
+    def cleanupSpec() {
+        SnapshotMatcher.validateSnapshots()
+    }
+
+    def setupSpec() {
+        SnapshotMatcher.start(new SpockConfig())
+    }
+
+    def 'Convert #scenario to uppercase'() {
+
+        when: 'I convert to uppercase'
+        def result = MyUtility.toUpperCase(value)
+
+        then: 'Should convert letters to uppercase'
+        expectScenario(scenario, uppercase).toMatchSnapshot()
+
+        where:
+        scenario | value
+        'letter' | 'a'
+        'number' | '1'
+    }
+}
+```
+
+#### Parameterized testing
+
+In order to support parameterized testing you can use the `expectScenario` method that accepts a scenario as the first parameter.
+
+`expectScenario(scenario, object).toMatchSnapshot()`
+
+You need to ensure all your scenarios are unique within a single method. You will normally pass a combination of your parameters to achieve this.
 
 #### Inheritance
 
@@ -198,6 +241,7 @@ Start SnapshotMatcher on child classes only:
 
 ```java
 package com.example;
+
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;

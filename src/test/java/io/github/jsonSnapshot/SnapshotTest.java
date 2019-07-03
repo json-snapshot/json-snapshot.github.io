@@ -10,6 +10,8 @@ import java.util.TreeSet;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import lombok.SneakyThrows;
+
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -36,6 +38,7 @@ class SnapshotTest {
             snapshotFile,
             String.class,
             String.class.getDeclaredMethod("toString"),
+            null,
             SnapshotMatcher.defaultJsonFunction(),
             "anyObject");
   }
@@ -63,5 +66,34 @@ class SnapshotTest {
     snapshotFile.push(SNAPSHOT_NAME + "anyWrongSnapshot");
 
     assertThrows(SnapshotMatchException.class, snapshot::toMatchSnapshot);
+  }
+
+  @SneakyThrows
+  @Test
+  void shouldRenderScenarioNameWhenSupplied() {
+    Snapshot snapshotWithScenario =
+        new Snapshot(
+            snapshotFile,
+            String.class,
+            String.class.getDeclaredMethod("toString"),
+            "hello world",
+            SnapshotMatcher.defaultJsonFunction(),
+            "anyObject");
+    assertThat(snapshotWithScenario.getSnapshotName())
+        .isEqualTo("java.lang.String.toString[hello world]=");
+  }
+
+  @SneakyThrows
+  @Test
+  void shouldNotRenderScenarioNameWhenNull() {
+    Snapshot snapshotWithoutScenario =
+        new Snapshot(
+            snapshotFile,
+            String.class,
+            String.class.getDeclaredMethod("toString"),
+            null,
+            SnapshotMatcher.defaultJsonFunction(),
+            "anyObject");
+    assertThat(snapshotWithoutScenario.getSnapshotName()).isEqualTo("java.lang.String.toString=");
   }
 }
