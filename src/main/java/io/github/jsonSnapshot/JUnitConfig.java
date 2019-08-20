@@ -39,7 +39,7 @@ public class JUnitConfig implements SnapshotConfig {
     return value != null && value.toUpperCase().startsWith("T");
   }
 
-  private boolean hasTestAnnotation(Method method) {
+  protected boolean hasTestAnnotation(Method method) {
     return
     // Junit 4
     method.isAnnotationPresent(org.junit.Test.class)
