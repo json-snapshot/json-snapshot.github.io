@@ -111,7 +111,8 @@ public class SnapshotMatcher {
     Object[] objects = mergeObjects(firstObject, others);
     StackTraceElement stackElement = config.findStacktraceElement();
     Method method = getMethod(clazz, stackElement.getMethodName());
-    Snapshot snapshot = new Snapshot(snapshotFile, clazz, method, scenario, jsonFunction, objects);
+    Snapshot snapshot =
+        new Snapshot(config, snapshotFile, clazz, method, scenario, jsonFunction, objects);
     validateExpectCall(snapshot);
     calledSnapshots.add(snapshot);
     return snapshot;

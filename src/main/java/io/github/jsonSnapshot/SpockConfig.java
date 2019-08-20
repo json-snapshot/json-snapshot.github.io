@@ -26,4 +26,10 @@ public class SpockConfig implements SnapshotConfig {
         .orElseThrow(
             () -> new SnapshotMatchException("Could not locate a method in package 'spec'"));
   }
+
+  @Override
+  public boolean shouldUpdateSnapshot() {
+    String value = System.getProperty(UPDATE_SNAPSHOTS_PARAMETER);
+    return value != null && value.toUpperCase().startsWith("T");
+  }
 }

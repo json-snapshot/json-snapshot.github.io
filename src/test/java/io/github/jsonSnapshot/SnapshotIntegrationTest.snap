@@ -50,3 +50,12 @@ io.github.jsonSnapshot.SnapshotIntegrationTest.shouldThrowSnapshotMatchException
     "name": "anyName5"
   }
 ]
+
+
+io.github.jsonSnapshot.SnapshotIntegrationTest.shouldThrowSnapshotMatchException=[
+  {
+    "id": "anyId5",
+    "value": 6,
+    "name": "anyName5"
+  }
+]

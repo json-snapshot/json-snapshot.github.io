@@ -24,13 +24,17 @@ public class Snapshot {
 
   private Object[] current;
 
+  private final SnapshotConfig snapshotConfig;
+
   Snapshot(
+      SnapshotConfig snapshotConfig,
       SnapshotFile snapshotFile,
       Class clazz,
       Method method,
       String scenario,
       Function<Object, String> jsonFunction,
       Object... current) {
+    this.snapshotConfig = snapshotConfig;
     this.current = current;
     this.snapshotFile = snapshotFile;
     this.clazz = clazz;
@@ -48,7 +52,7 @@ public class Snapshot {
     String currentObject = takeSnapshot();
 
     // Match Snapshot
-    if (rawSnapshot != null) {
+    if (rawSnapshot != null && !snapshotConfig.shouldUpdateSnapshot()) {
       if (!rawSnapshot.trim().equals(currentObject.trim())) {
         throw generateDiffError(rawSnapshot, currentObject);
       }

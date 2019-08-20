@@ -33,6 +33,12 @@ public class JUnitConfig implements SnapshotConfig {
                     "Could not locate a method with one of supported test annotations"));
   }
 
+  @Override
+  public boolean shouldUpdateSnapshot() {
+    String value = System.getProperty(UPDATE_SNAPSHOTS_PARAMETER);
+    return value != null && value.toUpperCase().startsWith("T");
+  }
+
   private boolean hasTestAnnotation(Method method) {
     return
     // Junit 4
