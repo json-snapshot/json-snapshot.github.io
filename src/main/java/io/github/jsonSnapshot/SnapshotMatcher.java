@@ -1,5 +1,7 @@
 package io.github.jsonSnapshot;
 
+import static org.assertj.core.util.Arrays.isNullOrEmpty;
+
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -12,10 +14,6 @@ import java.util.stream.Stream;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.assertj.core.util.Arrays;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.junit.jupiter.api.BeforeAll;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,6 +35,7 @@ public class SnapshotMatcher {
   private static SnapshotFile snapshotFile = null;
   private static List<Snapshot> calledSnapshots = new ArrayList<>();
   private static Function<Object, String> jsonFunction;
+  private static SnapshotConfig config;
 
   public static void start() {
     start(new DefaultConfig(), defaultJsonFunction());
@@ -52,8 +51,9 @@ public class SnapshotMatcher {
 
   public static void start(SnapshotConfig config, Function<Object, String> jsonFunction) {
     SnapshotMatcher.jsonFunction = jsonFunction;
+    SnapshotMatcher.config = config;
     try {
-      StackTraceElement stackElement = findStackElement();
+      StackTraceElement stackElement = config.findStacktraceElement();
       clazz = Class.forName(stackElement.getClassName());
       snapshotFile =
           new SnapshotFile(
@@ -88,16 +88,31 @@ public class SnapshotMatcher {
     }
   }
 
+  public static Snapshot expectScenario(String scenario, Object firstObject, Object... others) {
+    return expectCondition(scenario, firstObject, others);
+  }
+
   public static Snapshot expect(Object firstObject, Object... others) {
+    return expectCondition(null, firstObject, others);
+  }
+
+  /**
+   * @param scenario for parameterized tests supply a unique scenario for each iteration
+   * @param firstObject
+   * @param others
+   * @return
+   */
+  private static Snapshot expectCondition(String scenario, Object firstObject, Object... others) {
 
     if (clazz == null) {
       throw new SnapshotMatchException(
           "SnapshotTester not yet started! Start it on @BeforeClass/@BeforeAll with SnapshotMatcher.start()");
     }
     Object[] objects = mergeObjects(firstObject, others);
-    StackTraceElement stackElement = findStackElement();
+    StackTraceElement stackElement = config.findStacktraceElement();
     Method method = getMethod(clazz, stackElement.getMethodName());
-    Snapshot snapshot = new Snapshot(snapshotFile, clazz, method, jsonFunction, objects);
+    Snapshot snapshot =
+        new Snapshot(config, snapshotFile, clazz, method, scenario, jsonFunction, objects);
     validateExpectCall(snapshot);
     calledSnapshots.add(snapshot);
     return snapshot;
@@ -160,7 +175,7 @@ public class SnapshotMatcher {
     }
   }
 
-  private static Method getMethod(Class<?> clazz, String methodName) {
+  public static Method getMethod(Class<?> clazz, String methodName) {
     try {
       return Stream.of(clazz.getDeclaredMethods())
           .filter(method -> method.getName().equals(methodName))
@@ -180,51 +195,12 @@ public class SnapshotMatcher {
     }
   }
 
-  private static StackTraceElement findStackElement() {
-    StackTraceElement[] stackTraceElements = Thread.currentThread().getStackTrace();
-    int elementsToSkip = 1; // Start after stackTrace
-    while (SnapshotMatcher.class
-        .getName()
-        .equals(stackTraceElements[elementsToSkip].getClassName())) {
-      elementsToSkip++;
-    }
-
-    return Stream.of(stackTraceElements)
-        .skip(elementsToSkip)
-        .filter(
-            stackTraceElement ->
-                hasTestAnnotation(
-                    getMethod(
-                        getClass(stackTraceElement.getClassName()),
-                        stackTraceElement.getMethodName())))
-        .findFirst()
-        .orElseThrow(
-            () ->
-                new SnapshotMatchException(
-                    "Could not locate a method with one of supported test annotations"));
-  }
-
-  private static boolean hasTestAnnotation(Method method) {
-    return method.isAnnotationPresent(Test.class)
-        || method.isAnnotationPresent(BeforeClass.class)
-        || method.isAnnotationPresent(org.junit.jupiter.api.Test.class)
-        || method.isAnnotationPresent(BeforeAll.class);
-  }
-
   private static Object[] mergeObjects(Object firstObject, Object[] others) {
     Object[] objects = new Object[1];
     objects[0] = firstObject;
-    if (!Arrays.isNullOrEmpty(others)) {
+    if (!isNullOrEmpty(others)) {
       objects = ArrayUtils.addAll(objects, others);
     }
     return objects;
-  }
-
-  private static Class<?> getClass(String className) {
-    try {
-      return Class.forName(className);
-    } catch (ClassNotFoundException e) {
-      throw new IllegalArgumentException(e);
-    }
   }
 }

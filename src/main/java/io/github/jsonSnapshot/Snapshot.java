@@ -6,6 +6,7 @@ import java.util.Collection;
 import java.util.Set;
 import java.util.function.Function;
 
+import org.apache.commons.lang3.StringUtils;
 import org.assertj.core.util.diff.DiffUtils;
 import org.assertj.core.util.diff.Patch;
 
@@ -17,20 +18,28 @@ public class Snapshot {
 
   private Method method;
 
+  private String scenario;
+
   private Function<Object, String> jsonFunction;
 
   private Object[] current;
 
+  private final SnapshotConfig snapshotConfig;
+
   Snapshot(
+      SnapshotConfig snapshotConfig,
       SnapshotFile snapshotFile,
       Class clazz,
       Method method,
+      String scenario,
       Function<Object, String> jsonFunction,
       Object... current) {
+    this.snapshotConfig = snapshotConfig;
     this.current = current;
     this.snapshotFile = snapshotFile;
     this.clazz = clazz;
     this.method = method;
+    this.scenario = scenario;
     this.jsonFunction = jsonFunction;
   }
 
@@ -43,7 +52,7 @@ public class Snapshot {
     String currentObject = takeSnapshot();
 
     // Match Snapshot
-    if (rawSnapshot != null) {
+    if (rawSnapshot != null && !snapshotConfig.shouldUpdateSnapshot()) {
       if (!rawSnapshot.trim().equals(currentObject.trim())) {
         throw generateDiffError(rawSnapshot, currentObject);
       }
@@ -88,6 +97,7 @@ public class Snapshot {
   }
 
   public String getSnapshotName() {
-    return clazz.getName() + "." + method.getName() + "=";
+    String scenarioFormat = StringUtils.isBlank(scenario) ? "" : "[" + scenario + "]";
+    return clazz.getName() + "." + method.getName() + scenarioFormat + "=";
   }
 }

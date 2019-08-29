@@ -6,14 +6,19 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import lombok.SneakyThrows;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
@@ -33,9 +38,11 @@ class SnapshotTest {
     snapshotFile = new SnapshotFile(DEFAULT_CONFIG.getFilePath(), "anyFilePath");
     snapshot =
         new Snapshot(
+            new DefaultConfig(),
             snapshotFile,
             String.class,
             String.class.getDeclaredMethod("toString"),
+            null,
             SnapshotMatcher.defaultJsonFunction(),
             "anyObject");
   }
@@ -63,5 +70,60 @@ class SnapshotTest {
     snapshotFile.push(SNAPSHOT_NAME + "anyWrongSnapshot");
 
     assertThrows(SnapshotMatchException.class, snapshot::toMatchSnapshot);
+  }
+
+  @SneakyThrows
+  @Test
+  void shouldRenderScenarioNameWhenSupplied() {
+    Snapshot snapshotWithScenario =
+        new Snapshot(
+            new DefaultConfig(),
+            snapshotFile,
+            String.class,
+            String.class.getDeclaredMethod("toString"),
+            "hello world",
+            SnapshotMatcher.defaultJsonFunction(),
+            "anyObject");
+    assertThat(snapshotWithScenario.getSnapshotName())
+        .isEqualTo("java.lang.String.toString[hello world]=");
+  }
+
+  @SneakyThrows
+  @Test
+  void shouldNotRenderScenarioNameWhenNull() {
+    Snapshot snapshotWithoutScenario =
+        new Snapshot(
+            new DefaultConfig(),
+            snapshotFile,
+            String.class,
+            String.class.getDeclaredMethod("toString"),
+            null,
+            SnapshotMatcher.defaultJsonFunction(),
+            "anyObject");
+    assertThat(snapshotWithoutScenario.getSnapshotName()).isEqualTo("java.lang.String.toString=");
+  }
+
+  @SneakyThrows
+  @Test
+  void shouldOverwriteSnapshotsWhenParamIsPassed() {
+    SnapshotConfig mockConfig = Mockito.mock(SnapshotConfig.class);
+    Mockito.when(mockConfig.shouldUpdateSnapshot()).thenReturn(true);
+    SnapshotFile snapshotFile = Mockito.mock(SnapshotFile.class);
+    Set<String> set = new HashSet<>();
+    set.add("java.lang.String.toString[hello world]=[{" + "\"a\": \"b\"" + "}]");
+    Mockito.when(snapshotFile.getRawSnapshots()).thenReturn(set);
+
+    Snapshot snapshot =
+        new Snapshot(
+            mockConfig,
+            snapshotFile,
+            String.class,
+            String.class.getDeclaredMethod("toString"),
+            "hello world",
+            SnapshotMatcher.defaultJsonFunction(),
+            "anyObject");
+    snapshot.toMatchSnapshot();
+    Mockito.verify(snapshotFile)
+        .push("java.lang.String.toString[hello world]=[\n" + "  \"anyObject\"\n" + "]");
   }
 }
