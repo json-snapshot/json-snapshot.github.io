@@ -16,11 +16,15 @@ import lombok.Getter;
 import lombok.NonNull;
 
 import org.apache.commons.lang3.StringUtils;
+import org.assertj.core.util.VisibleForTesting;
 
 public class SnapshotFile {
 
   private static final Charset UTF_8 = StandardCharsets.UTF_8;
-  private static final String SPLIT_STRING = "\n\n\n";
+
+  private static final String SPLIT_REGEXP = "\\R\\R\\R";
+
+  private static final String JOIN_STRING = "\n\n\n";
 
   private String pathAndfileName;
 
@@ -43,12 +47,18 @@ public class SnapshotFile {
     Path path = Paths.get(this.pathAndfileName);
 
     String lines = new String(Files.readAllBytes(path), UTF_8);
-    String[] rawSnapshotItems = lines.split(SPLIT_STRING);
+		String[] rawSnapshotItems = split(lines);
 
     Stream.of(rawSnapshotItems)
         .filter(StringUtils::isNotBlank)
         .map(SnapshotDataItem::new)
         .forEach(storedSnapshots::add);
+  }
+
+  @VisibleForTesting
+  static String[] split(final String lines)
+  {
+    return lines.split(SPLIT_REGEXP);
   }
 
   private File createFile(String fileName) {
@@ -76,7 +86,7 @@ public class SnapshotFile {
               .getItems()
               .stream()
               .map(SnapshotDataItem::asRawData)
-              .collect(Collectors.joining(SPLIT_STRING));
+              .collect(Collectors.joining(JOIN_STRING));
       fileWriter.write(content);
     } catch (IOException e) {
       throw new RuntimeException(
