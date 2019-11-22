@@ -47,7 +47,7 @@ public class SnapshotFile {
     Path path = Paths.get(this.pathAndfileName);
 
     String lines = new String(Files.readAllBytes(path), UTF_8);
-		String[] rawSnapshotItems = split(lines);
+    String[] rawSnapshotItems = split(lines);
 
     Stream.of(rawSnapshotItems)
         .filter(StringUtils::isNotBlank)
@@ -56,8 +56,7 @@ public class SnapshotFile {
   }
 
   @VisibleForTesting
-  static String[] split(final String lines)
-  {
+  static String[] split(final String lines) {
     return lines.split(SPLIT_REGEXP);
   }
 

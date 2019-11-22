@@ -26,38 +26,28 @@ import org.junit.jupiter.api.Test;
  * #L%
  */
 
-class SnapshotFileTest
-{
+class SnapshotFileTest {
 
-	@Test
-	void split_n()
-	{
-		verifySplitWithLineBreak("\n");
-	}
+  @Test
+  void split_n() {
+    verifySplitWithLineBreak("\n");
+  }
 
-	@Test
-	void split_r()
-	{
-		verifySplitWithLineBreak("\r");
-	}
+  @Test
+  void split_r() {
+    verifySplitWithLineBreak("\r");
+  }
 
-	@Test
-	void split_rn()
-	{
-		verifySplitWithLineBreak("\r\n");
-	}
+  @Test
+  void split_rn() {
+    verifySplitWithLineBreak("\r\n");
+  }
 
-	private void verifySplitWithLineBreak(final String linebreak)
-	{
-		String str = "blahblahblah_1"
-				+ linebreak
-				+ linebreak
-				+ linebreak
-				+ "blahblahblah_2";
+  private void verifySplitWithLineBreak(final String linebreak) {
+    String str = "blahblahblah_1" + linebreak + linebreak + linebreak + "blahblahblah_2";
 
-		String[] result = SnapshotFile.split(str);
-		assertThat(result[0]).isEqualTo("blahblahblah_1");
-		assertThat(result[1]).isEqualTo("blahblahblah_2");
-	}
-
+    String[] result = SnapshotFile.split(str);
+    assertThat(result[0]).isEqualTo("blahblahblah_1");
+    assertThat(result[1]).isEqualTo("blahblahblah_2");
+  }
 }

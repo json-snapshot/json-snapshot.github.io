@@ -35,7 +35,7 @@ public class SnapshotMatcher {
   private static Class clazz = null;
   private static SnapshotFile snapshotFile = null;
   private static List<Snapshot> calledSnapshots = new ArrayList<>();
-  private static Function<Object, String> jsonFunction;
+  private static Function<Object, String> serializeFunction;
   private static SnapshotMatchingStrategy snapshotMatchingStrategy;
 
   public static void start() {
@@ -46,12 +46,17 @@ public class SnapshotMatcher {
     start(config, defaultJsonFunction());
   }
 
-  public static void start(Function<Object, String> jsonFunction) {
-    start(new DefaultConfig(), jsonFunction);
+  public static void start(Function<Object, String> serializeFunction) {
+    start(new DefaultConfig(), serializeFunction);
   }
 
-  public static void start(SnapshotConfig config, Function<Object, String> jsonFunction) {
-    SnapshotMatcher.jsonFunction = jsonFunction;
+	/**
+	 * @param serializeFunction invoked to create the actual snapshot string; notes:
+	 *            <li>needs to be able to handle {@code Object[]}
+	 *            <li>needs to correspond with the the given {@code config}'s {@link SnapshotMatchingStrategy}.
+	 */
+  public static void start(SnapshotConfig config, Function<Object, String> serializeFunction) {
+    SnapshotMatcher.serializeFunction = serializeFunction;
     try {
       StackTraceElement stackElement = findStackElement();
       clazz = Class.forName(stackElement.getClassName());
@@ -100,7 +105,7 @@ public class SnapshotMatcher {
     StackTraceElement stackElement = findStackElement();
     Method method = getMethod(clazz, stackElement.getMethodName());
     Snapshot snapshot =
-        new Snapshot(snapshotFile, clazz, method, jsonFunction, snapshotMatchingStrategy, objects);
+        new Snapshot(snapshotFile, clazz, method, serializeFunction, snapshotMatchingStrategy, objects);
     validateExpectCall(snapshot);
     calledSnapshots.add(snapshot);
     return snapshot;

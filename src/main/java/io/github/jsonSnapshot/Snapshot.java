@@ -12,7 +12,7 @@ public class Snapshot {
 
   private Method method;
 
-  private Function<Object, String> jsonFunction;
+  private Function<Object, String> serializeFunction;
 
   private SnapshotMatchingStrategy snapshotMatchingStrategy;
 
@@ -29,7 +29,7 @@ public class Snapshot {
     this.snapshotFile = snapshotFile;
     this.clazz = clazz;
     this.method = method;
-    this.jsonFunction = jsonFunction;
+    this.serializeFunction = jsonFunction;
     this.snapshotMatchingStrategy = snapshotMatchingStrategy;
   }
 
@@ -51,7 +51,7 @@ public class Snapshot {
   }
 
   private SnapshotDataItem takeSnapshot() {
-    return new SnapshotDataItem(getSnapshotName(), jsonFunction.apply(current));
+    return new SnapshotDataItem(getSnapshotName(), serializeFunction.apply(current));
   }
 
   public String getSnapshotName() {
