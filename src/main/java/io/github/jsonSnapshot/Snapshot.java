@@ -22,14 +22,14 @@ public class Snapshot {
       SnapshotFile snapshotFile,
       Class clazz,
       Method method,
-      Function<Object, String> jsonFunction,
+      Function<Object, String> serializeFunction,
       SnapshotMatchingStrategy snapshotMatchingStrategy,
       Object... current) {
     this.current = current;
     this.snapshotFile = snapshotFile;
     this.clazz = clazz;
     this.method = method;
-    this.serializeFunction = jsonFunction;
+    this.serializeFunction = serializeFunction;
     this.snapshotMatchingStrategy = snapshotMatchingStrategy;
   }
 

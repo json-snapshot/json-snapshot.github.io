@@ -50,11 +50,11 @@ public class SnapshotMatcher {
     start(new DefaultConfig(), serializeFunction);
   }
 
-	/**
-	 * @param serializeFunction invoked to create the actual snapshot string; notes:
-	 *            <li>needs to be able to handle {@code Object[]}
-	 *            <li>needs to correspond with the the given {@code config}'s {@link SnapshotMatchingStrategy}.
-	 */
+  /**
+   * @param serializeFunction invoked to create the actual snapshot string. Note that it needs to be
+   *     able to handle {@code Object[]} and that it needs needs to correspond with the the given
+   *     {@code config}'s {@link SnapshotMatchingStrategy}.
+   */
   public static void start(SnapshotConfig config, Function<Object, String> serializeFunction) {
     SnapshotMatcher.serializeFunction = serializeFunction;
     try {
@@ -105,7 +105,8 @@ public class SnapshotMatcher {
     StackTraceElement stackElement = findStackElement();
     Method method = getMethod(clazz, stackElement.getMethodName());
     Snapshot snapshot =
-        new Snapshot(snapshotFile, clazz, method, serializeFunction, snapshotMatchingStrategy, objects);
+        new Snapshot(
+            snapshotFile, clazz, method, serializeFunction, snapshotMatchingStrategy, objects);
     validateExpectCall(snapshot);
     calledSnapshots.add(snapshot);
     return snapshot;

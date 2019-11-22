@@ -19,10 +19,12 @@ public class StringEqualsMatchingStrategy implements SnapshotMatchingStrategy {
   @Override
   public void match(
       @NonNull final SnapshotDataItem expectedSnapshotItem, @NonNull final String currentObject) {
-
     final String rawSnapshotStr = expectedSnapshotItem.getData();
 
-    if (!rawSnapshotStr.trim().equals(currentObject.trim())) {
+    final String snapShotEOLNormalized = rawSnapshotStr.trim().replaceAll("\\R", "\n");
+    final String currentObjectEOLNormalized = currentObject.trim().trim().replaceAll("\\R", "\n");
+
+    if (!snapShotEOLNormalized.equals(currentObjectEOLNormalized)) {
       throw generateDiffError(rawSnapshotStr, currentObject);
     }
   }
@@ -30,11 +32,11 @@ public class StringEqualsMatchingStrategy implements SnapshotMatchingStrategy {
   private SnapshotMatchException generateDiffError(
       @NonNull final String rawSnapshot, @NonNull final String currentObject) {
     // compute the patch: this is the diffutils part
-    Patch<String> patch =
+    final Patch<String> patch =
         DiffUtils.diff(
-            Arrays.asList(rawSnapshot.trim().split("\n")),
-            Arrays.asList(currentObject.trim().split("\n")));
-    String error =
+            Arrays.asList(rawSnapshot.trim().split("\\R")),
+            Arrays.asList(currentObject.trim().split("\\R")));
+    final String error =
         "StringEqualsMatchRule - error on: \n"
             + currentObject.trim()
             + "\n\n"
