@@ -1,13 +1,8 @@
 package io.github.jsonSnapshot;
 
 import java.lang.reflect.Method;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Set;
+import java.util.Optional;
 import java.util.function.Function;
-
-import org.assertj.core.util.diff.DiffUtils;
-import org.assertj.core.util.diff.Patch;
 
 public class Snapshot {
 
@@ -17,7 +12,9 @@ public class Snapshot {
 
   private Method method;
 
-  private Function<Object, String> jsonFunction;
+  private Function<Object, String> serializeFunction;
+
+  private SnapshotMatchingStrategy snapshotMatchingStrategy;
 
   private Object[] current;
 
@@ -25,28 +22,27 @@ public class Snapshot {
       SnapshotFile snapshotFile,
       Class clazz,
       Method method,
-      Function<Object, String> jsonFunction,
+      Function<Object, String> serializeFunction,
+      SnapshotMatchingStrategy snapshotMatchingStrategy,
       Object... current) {
     this.current = current;
     this.snapshotFile = snapshotFile;
     this.clazz = clazz;
     this.method = method;
-    this.jsonFunction = jsonFunction;
+    this.serializeFunction = serializeFunction;
+    this.snapshotMatchingStrategy = snapshotMatchingStrategy;
   }
 
   public void toMatchSnapshot() {
 
-    Set<String> rawSnapshots = snapshotFile.getRawSnapshots();
+    final SnapshotData snapshots = snapshotFile.getStoredSnapshots();
+    final Optional<SnapshotDataItem> snapshot = snapshots.getItemByName(getSnapshotName());
 
-    String rawSnapshot = getRawSnapshot(rawSnapshots);
-
-    String currentObject = takeSnapshot();
+    final SnapshotDataItem currentObject = takeSnapshot();
 
     // Match Snapshot
-    if (rawSnapshot != null) {
-      if (!rawSnapshot.trim().equals(currentObject.trim())) {
-        throw generateDiffError(rawSnapshot, currentObject);
-      }
+    if (snapshot.isPresent()) {
+      snapshotMatchingStrategy.match(snapshot.get(), currentObject.getData());
     }
     // Create New Snapshot
     else {
@@ -54,40 +50,11 @@ public class Snapshot {
     }
   }
 
-  private SnapshotMatchException generateDiffError(String rawSnapshot, String currentObject) {
-    // compute the patch: this is the diffutils part
-    Patch<String> patch =
-        DiffUtils.diff(
-            Arrays.asList(rawSnapshot.trim().split("\n")),
-            Arrays.asList(currentObject.trim().split("\n")));
-    String error =
-        "Error on: \n"
-            + currentObject.trim()
-            + "\n\n"
-            + patch
-                .getDeltas()
-                .stream()
-                .map(delta -> delta.toString() + "\n")
-                .reduce(String::concat)
-                .get();
-    return new SnapshotMatchException(error);
-  }
-
-  private String getRawSnapshot(Collection<String> rawSnapshots) {
-    for (String rawSnapshot : rawSnapshots) {
-
-      if (rawSnapshot.contains(getSnapshotName())) {
-        return rawSnapshot;
-      }
-    }
-    return null;
-  }
-
-  private String takeSnapshot() {
-    return getSnapshotName() + jsonFunction.apply(current);
+  private SnapshotDataItem takeSnapshot() {
+    return new SnapshotDataItem(getSnapshotName(), serializeFunction.apply(current));
   }
 
   public String getSnapshotName() {
-    return clazz.getName() + "." + method.getName() + "=";
+    return clazz.getName() + "." + method.getName();
   }
 }

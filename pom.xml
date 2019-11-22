@@ -102,6 +102,13 @@
       <version>1.2.0</version>
     </dependency>
     <dependency>
+      <!-- workaround for https://bugs.eclipse.org/bugs/show_bug.cgi?id=545849 -->
+        <groupId>org.junit.platform</groupId>
+      <artifactId>junit-platform-launcher</artifactId>
+      <version>1.4.1</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
       <groupId>org.junit.vintage</groupId>
       <artifactId>junit-vintage-engine</artifactId>
       <version>5.2.0</version>
@@ -110,6 +117,11 @@
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
       <version>1.8.0-beta2</version>
+    </dependency>
+    <dependency>
+      <groupId>org.skyscreamer</groupId>
+      <artifactId>jsonassert</artifactId>
+      <version>1.5.0</version>
     </dependency>
   </dependencies>
 
